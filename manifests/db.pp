@@ -15,8 +15,8 @@ file { "mysql-allow-acess":
 	owner   => mysql,
 	group   => mysql,
 	mode    => '0644',
-	content => template("vagrant/manifests/allow_external.cnf"),
-	require => Package["mysql-server"]
+	content => template("/vagrant/manifests/allow_external.cnf"),
+	require => Package["mysql-server"],
   notify  => Service["mysql"]
 }
 
@@ -36,19 +36,15 @@ exec { "loja-schema":
 }
 
 exec { "remove-anonymous-user":
-  command => "mysql -u root -e \"DELETE FROM mysql.user \
-                                 WHERE user=’’; \
-                                 FLUSH PRIVILEGES\"",
-  onlyif  => "mysql -u ’ ’",
+  command => "mysql -u root -e \"DELETE FROM mysql.user WHERE user=’’; FLUSH PRIVILEGES\"",
+  onlyif  => "mysql -u’ ’",
   path    => "/usr/bin",
   require => Service["mysql"]
 }
 
 exec { "loja-user":
   unless  => "mysql -u loja -p lojasecret loja_schema",
-  command => "mysql -u root -e \"GRANT ALL PRIVILEGES ON \
-                                 loja_schema.* TO ’loja’@’%’ \
-                                 IDENTIFIED BY ’lojasecret’;\"",
+  command => "mysql -u root -e \"GRANT ALL PRIVILEGES ON loja_schema.* TO 'loja'@'localhost' IDENTIFIED BY 'lojasecret';\"",
   path    => "/usr/bin/",
   require => Exec["loja-schema"]
 }
